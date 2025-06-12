@@ -3,14 +3,19 @@ project: my_project
 
 provider: local
 
-# Online store
+# Online store (Redis active)
 online_store:
-    type: postgres
-    host: localhost
-    port: 5432
-    database: feast
-    user: postgres
-    password: postgres
+    type: redis
+    connection_string: "localhost:6379"
+
+# Online store (PostgreSQL commented out)
+# online_store:
+#     type: postgres
+#     host: localhost
+#     port: 5432
+#     database: feast
+#     user: postgres
+#     password: postgres
 
 # Offline store
 offline_store:
