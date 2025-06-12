@@ -18,8 +18,11 @@ def run_demo():
     # print("\n--- Historical features for batch scoring ---")
     # fetch_historical_features_entity_df(store, for_batch_scoring=True)
 
+    # print("\n--- Load features into online store ---")
+    # store.materialize_incremental(end_date=datetime.now())
+
     print("\n--- Load features into online store ---")
-    store.materialize_incremental(end_date=datetime.now())
+    store.materialize(start_date    =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now())
 
     print("\n--- Online features ---")
     fetch_online_features(store)
@@ -48,7 +51,7 @@ def run_demo():
     #     }
     # )
     # print(event_df)
-    store.push("driver_stats_push_source", event_df, to=PushMode.ONLINE_AND_OFFLINE)
+    # store.push("driver_stats_push_source", event_df, to=PushMode.ONLINE_AND_OFFLINE)
 
     # print("\n--- Online features again with updated values from a stream push---")
     # fetch_online_features(store, source="push")

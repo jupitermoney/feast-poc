@@ -18,7 +18,10 @@ Once your virtual environment is active, upgrade `pip` and then install the `fea
 ```bash
 python3 -m pip install --upgrade pip
 pip install feast pandas pyarrow
+pip install 'feast[postgres]' # for python online store
 ```
+
+
 
 ## 3. Initialize a Feast Project
 
@@ -154,3 +157,29 @@ CREATE TABLE my_project_driver_hourly_stats_fresh (
             );
 CREATE INDEX my_project_driver_hourly_stats_fresh_ek ON my_project_driver_hourly_stats_fresh (entity_key);
 sqlite>
+
+
+Choice of online store
+
+PSQL
+```
+CREATE TABLE public.my_project_driver_hourly_stats (
+	entity_key bytea NOT NULL,
+	feature_name text NOT NULL,
+	value bytea NULL,
+	value_text text NULL,
+	vector_value bytea NULL,
+	event_ts timestamptz NULL,
+	created_ts timestamptz NULL,
+	CONSTRAINT my_project_driver_hourly_stats_pkey PRIMARY KEY (entity_key, feature_name)
+);
+CREATE INDEX my_project_driver_hourly_stats_ek ON public.my_project_driver_hourly_stats USING btree (entity_key);
+```
+
+How does the data look like?
+INSERT INTO my_project_driver_hourly_stats (entity_key,feature_name,value,value_text,vector_value,event_ts,created_ts) VALUES
+	 (decode('020000006472697665725F69640400000004000000EC030000','hex'),'conv_rate',decode('3513F3423F','hex'),NULL,NULL,'2025-06-12 14:30:00.000','2025-06-12 16:27:04.001');
+   
+Basically, each feature got stored as a row in PSQL with primary key as (entity_key, feature_name) and indexed on entity_key
+
+
