@@ -19,6 +19,7 @@ Once your virtual environment is active, upgrade `pip` and then install the `fea
 python3 -m pip install --upgrade pip
 pip install feast pandas pyarrow
 pip install 'feast[postgres]' # for python online store
+pip install 'feast[redis]' # for redis
 ```
 
 
@@ -176,10 +177,58 @@ CREATE TABLE public.my_project_driver_hourly_stats (
 CREATE INDEX my_project_driver_hourly_stats_ek ON public.my_project_driver_hourly_stats USING btree (entity_key);
 ```
 
+- Each feature view is one table
+- All features residing in one feature view exsits in one table
+- Each feature for a key is one row
+
 How does the data look like?
 INSERT INTO my_project_driver_hourly_stats (entity_key,feature_name,value,value_text,vector_value,event_ts,created_ts) VALUES
 	 (decode('020000006472697665725F69640400000004000000EC030000','hex'),'conv_rate',decode('3513F3423F','hex'),NULL,NULL,'2025-06-12 14:30:00.000','2025-06-12 16:27:04.001');
    
-Basically, each feature got stored as a row in PSQL with primary key as (entity_key, feature_name) and indexed on entity_key
+Basically, each feature got stored as a row in PSQL with primary key as (entity_key, feature_name) and indexed on entity_key. Protobuf-encoded binary format is the data in each, so cannot query directly from DB via SQL
 
+
+
+Redis
+
+docker run --name feast-redis -p 6379:6379 -d redis:latest
+
+keys *
+1) "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xed\x03\x00\x00my_project"
+2) "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xe9\x03\x00\x00my_project"
+3) "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xec\x03\x00\x00my_project"
+4) "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xea\x03\x00\x00my_project"
+5) "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xeb\x03\x00\x00my_project"
+127.0.0.1:6379> get \x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xed\x03\x00\x00my_project
+(nil)
+
+ HGETALL "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xed\x03\x00\x00my_project"
+ 1) "_ts:driver_hourly_stats"
+ 2) "\b\x90\xae\xaa\xc2\x06"
+ 3) "a`\xe3\xda"
+ 4) "5\x96FV?"
+ 5) "\xfa^X\xad"
+ 6) "5d8S?"
+ 7) "\x18\xa5\xe5\xa3"
+ 8) " \xf0\x02"
+ 9) "_ts:driver_hourly_stats_fresh"
+10) "\b\x90\xae\xaa\xc2\x06"
+11) "\x03\xed\x10F"
+12) "5\x96FV?"
+13) "\xe2s\x86\xb9"
+14) "5d8S?"
+15) "?\te\xd3"
+16) " \xf0\x02"
+
+HGET "\x02\x00\x00\x00driver_id\x04\x00\x00\x00\x04\x00\x00\x00\xed\x03\x00\x00my_project" "_ts:driver_hourly_stats"
+"a\xe3\xda" (likely driver_hourly_stats:conv_rate) and "5\x96FV?": 
+* This is the field name (e.g., conv_rate for driver_hourly_stats). 
+* This is the binary, Protobuf-encoded value for conv_rate
+
+Basically it looks key_set is first level datastructure
+both features have same keyset, so hash will be same
+hash_key  = function(keyset)
+
+inside the hashset, there will be fields, which are dependant on feature_view and feature name
+field = function(feature_view, feature_name)
 
