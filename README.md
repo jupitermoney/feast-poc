@@ -232,3 +232,19 @@ hash_key  = function(keyset)
 inside the hashset, there will be fields, which are dependant on feature_view and feature name
 field = function(feature_view, feature_name)
 
+
+
+Feast UI
+
+Open http://0.0.0.0:8888/
+Views availale
+- Data sources
+- Entities
+- Features
+- Feature views
+- Feature services
+- Lineage
+- Search capability for all components
+
+Feature registry
+- change the registry from sqlite db to PSQL and view how the entities, features and other components are stored
