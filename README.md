@@ -20,13 +20,16 @@ Once your virtual environment is active, upgrade `pip` and then install the core
 python3 -m pip install --upgrade pip
 pip install feast pandas pyarrow
 # Optional: Install for PostgreSQL online store
-# pip install \'feast[postgres]\'
+pip install \'feast[postgres]\'
 # Optional: Install for Redis online store
 # pip install \'feast[redis]\'
 # Optional: Install for Delta Lake support (if needed for offline store)
-# pip install deltalake
+pip install deltalake==0.25.4
 # Optional: Install PySpark (if using Spark with Delta Lake)
-# pip install pyspark
+pip install pyspark
+
+pip uninstall protobuf -y && pip install protobuf==5.29.3
+
 ```
 
 ## 3. Initialize a Feast Project

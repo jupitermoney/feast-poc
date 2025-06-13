@@ -22,7 +22,7 @@ def run_demo():
     # store.materialize_incremental(end_date=datetime.now())
 
     print("\n--- Load features into online store ---")
-    store.materialize(start_date    =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now())
+    store.materialize(start_date =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now())
 
     print("\n--- Online features ---")
     fetch_online_features(store)

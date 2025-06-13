@@ -18,7 +18,7 @@ from feast.data_format import DeltaFormat
 from feast.feature_logging import LoggingConfig
 from feast.infra.offline_stores.file_source import FileLoggingDestination
 from feast.on_demand_feature_view import on_demand_feature_view
-from feast.types import Float32, Float64, Int64
+from feast.types import Float32, Float64, Int64, String,Int32
 
 # Define a project for the feature repo
 project = Project(name="my_project", description="A project for driver statistics")
