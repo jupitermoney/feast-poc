@@ -14,6 +14,7 @@ from feast import (
     PushSource,
     RequestSource,
 )
+from feast.data_format import DeltaFormat
 from feast.feature_logging import LoggingConfig
 from feast.infra.offline_stores.file_source import FileLoggingDestination
 from feast.on_demand_feature_view import on_demand_feature_view
@@ -26,6 +27,9 @@ project = Project(name="my_project", description="A project for driver statistic
 # fetch features.
 driver = Entity(name="driver", join_keys=["driver_id"])
 
+customer = Entity(name="customer", join_keys=["customer_id"])
+sms = Entity(name="sms", join_keys=["sms_id"])
+
 # Read data from parquet files. Parquet is convenient for local development mode. For
 # production, you can use your favorite DWH, such as BigQuery. See Feast documentation
 # for more info.
@@ -34,6 +38,14 @@ driver_stats_source = FileSource(
     path="data/driver_stats.parquet",
     timestamp_field="event_timestamp",
     created_timestamp_column="created",
+)
+
+sms_source = FileSource(
+    name="sms_source",
+    path="data/sms",
+    timestamp_field="message_timestamp",
+    created_timestamp_column="processing_timestamp",
+    file_format=DeltaFormat(),
 )
 
 # Our parquet files contain sample data that includes a driver_id column, timestamps and
@@ -58,6 +70,31 @@ driver_stats_fv = FeatureView(
     # Tags are user defined key/value pairs that are attached to each
     # feature view
     tags={"team": "driver_performance"},
+)
+
+sms_online_fv = FeatureView(
+    # The unique name of this feature view. Two feature views in a single
+    # project cannot have the same name
+    name="sms_online",
+    entities=[sms, customer],
+    # The list of features defined below act as a schema to both define features
+    # for both materialization of features into a store, and are used as references
+    # during retrieval for building a training dataset or serving features
+    schema=[
+        Field(name="sender_id", dtype=String),
+        Field(name="concept", dtype=String),
+        Field(name="sms_type", dtype=Int32),
+        Field(name="date", dtype=String),
+        Field(name="transaction_ner_account", dtype=String),
+        Field(name="transaction_ner_amount", dtype=String),
+        Field(name="transaction_ner_balance", dtype=String),
+        Field(name="transaction_ner_txn_ref", dtype=String),
+        Field(name="transaction_ner_payee_details", dtype=String),
+        Field(name="transaction_ner_payer_details", dtype=String),
+        Field(name="transaction_ner_financial_product", dtype=String),
+    ],
+    online=True,
+    source=sms_source,
 )
 
 # Define a request data source which encodes features / information only
