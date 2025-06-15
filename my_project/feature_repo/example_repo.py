@@ -10,15 +10,18 @@ from feast import (
     FeatureView,
     Field,
     FileSource,
+    KafkaSource,
     Project,
     PushSource,
     RequestSource,
 )
-from feast.data_format import DeltaFormat
+from feast.data_format import DeltaFormat, JsonFormat
 from feast.feature_logging import LoggingConfig
 from feast.infra.offline_stores.file_source import FileLoggingDestination
 from feast.on_demand_feature_view import on_demand_feature_view
+from feast.stream_feature_view import stream_feature_view
 from feast.types import Float32, Float64, Int64, String,Int32
+from pandas import DataFrame
 
 # Define a project for the feature repo
 project = Project(name="my_project", description="A project for driver statistics")
@@ -46,6 +49,18 @@ sms_source = FileSource(
     timestamp_field="message_timestamp",
     created_timestamp_column="processing_timestamp",
     file_format=DeltaFormat(),
+)
+
+driver_stats_stream_source = KafkaSource(
+    name="driver_stats_stream",
+    kafka_bootstrap_servers="localhost:9092",
+    topic="my-topic",
+    timestamp_field="event_timestamp",
+    batch_source=driver_stats_source,
+    message_format=JsonFormat(
+        schema_json="driver_id integer, event_timestamp timestamp, conv_rate double, acc_rate double, created timestamp"
+    ),
+    watermark_delay_threshold=timedelta(minutes=5),
 )
 
 # Our parquet files contain sample data that includes a driver_id column, timestamps and
@@ -96,6 +111,27 @@ sms_online_fv = FeatureView(
     online=True,
     source=sms_source,
 )
+
+@stream_feature_view(
+    entities=[driver],
+    ttl=timedelta(seconds=8640000000),
+    mode="spark",
+    schema=[
+        Field(name="conv_percentage", dtype=Float32),
+        Field(name="acc_percentage", dtype=Float32),
+    ],
+    timestamp_field="event_timestamp",
+    online=True,
+    source=driver_stats_stream_source,
+)
+def driver_hourly_stats_stream(df: DataFrame):
+    from pyspark.sql.functions import col
+
+    return (
+        df.withColumn("conv_percentage", col("conv_rate") * 100.0)
+        .withColumn("acc_percentage", col("acc_rate") * 100.0)
+        .drop("conv_rate", "acc_rate")
+    )
 
 # Define a request data source which encodes features / information only
 # available at request time (e.g. part of the user initiated HTTP request)

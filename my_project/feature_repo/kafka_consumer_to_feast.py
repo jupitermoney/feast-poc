@@ -11,11 +11,11 @@ TOPIC_NAME = 'my-topic'
 # IMPORTANT: This path should point to your feature repository directory,
 # which contains your feature_store.yaml and feature view definitions.
 # 'my_project/feature_repo' is relative to your workspace root.
-FEAST_REPO_PATH = 'my_project/feature_repo'
+FEAST_REPO_PATH = '.'
 
 # --- Initialize Feast FeatureStore ---
 try:
-    store = FeatureStore(repo_path=FEAST_REPO_PATH)
+    store = FeatureStore(repo_path=".")
     print(f"Feast FeatureStore initialized from {FEAST_REPO_PATH}")
 except Exception as e:
     print(f"Error initializing Feast FeatureStore: {e}")
@@ -56,6 +56,10 @@ for message in consumer:
     print(f"\nReceived message from Kafka: {raw_data}")
 
     try:
+        # Clean the event_timestamp string: remove 'Z' if '+00:00' is present
+        event_timestamp_str = raw_data.get("event_timestamp")
+        # No need to modify event_timestamp_str for the new format 'YYYY-MM-DD HH:MM:SS'
+
         # Prepare data for Feast:
         # The DataFrame must have columns that match the feature view's entities and features,
         # plus an 'event_timestamp' column.
@@ -63,15 +67,20 @@ for message in consumer:
         # and 'conv_rate'. Adjust based on your actual Kafka message structure.
         features_data = {
             "driver_id": [raw_data.get("driver_id")],
-            "event_timestamp": [datetime.fromisoformat(raw_data.get("event_timestamp").replace('Z', '+00:00'))], # Convert ISO string to datetime
+            "event_timestamp": [pd.to_datetime(event_timestamp_str)],
             "conv_rate": [raw_data.get("conv_rate")],
+            "acc_rate": [raw_data.get("acc_rate")], # Add acc_rate
             # Add other features as defined in your 'driver_hourly_stats_stream' StreamFeatureView
         }
         features_df = pd.DataFrame(features_data)
 
+        # Drop the 'created' column if it exists, as it's not part of the StreamFeatureView schema
+        if 'created' in features_df.columns:
+            features_df = features_df.drop(columns=['created'])
+
         # Write to Feast Online Store
         store.write_to_online_store(
-            feature_view=sfv,
+            feature_view_name=sfv,
             df=features_df,
         )
         print(f"Successfully wrote features for driver_id {raw_data.get('driver_id')} to online store.")
@@ -81,5 +90,5 @@ for message in consumer:
         print(f"Message content that caused error: {raw_data}")
 
 # Clean up (this part might not be reached in a continuous consumer)
-consumer.close()
-print("Kafka consumer closed.") 
+# consumer.close()
+# print("Kafka consumer closed.") 
