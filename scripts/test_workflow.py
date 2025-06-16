@@ -19,10 +19,10 @@ def run_demo():
     # fetch_historical_features_entity_df(store, for_batch_scoring=True)
 
     print("\n--- Load features into online store ---")
-    # store.materialize_incremental(end_date=datetime.now(), feature_views=["sms_online"])
+    store.materialize_incremental(end_date=datetime.now(), feature_views=["sms_online"])
 
     # print("\n--- Load features into online store ---")
-    store.materialize(start_date =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now(), feature_views=["driver_hourly_stats", "driver_hourly_stats_fresh"])
+    # store.materialize(start_date =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now(), feature_views=["driver_hourly_stats", "driver_hourly_stats_fresh"])
 
     print("\n--- Online features ---")
     fetch_online_features(store)
