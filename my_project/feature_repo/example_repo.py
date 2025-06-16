@@ -14,6 +14,7 @@ from feast import (
     Project,
     PushSource,
     RequestSource,
+    ValueType,
 )
 from feast.data_format import DeltaFormat, JsonFormat
 from feast.feature_logging import LoggingConfig
@@ -28,10 +29,10 @@ project = Project(name="my_project", description="A project for driver statistic
 
 # Define an entity for the driver. You can think of an entity as a primary key used to
 # fetch features.
-driver = Entity(name="driver", join_keys=["driver_id"])
+driver = Entity(name="driver", join_keys=["driver_id"], value_type=ValueType.STRING)
 
-customer = Entity(name="customer", join_keys=["customer_id"])
-sms = Entity(name="sms", join_keys=["sms_id"])
+customer = Entity(name="customer", join_keys=["customer_id"], value_type=ValueType.STRING)
+sms = Entity(name="sms", join_keys=["sms_id"], value_type=ValueType.STRING)
 
 # Read data from parquet files. Parquet is convenient for local development mode. For
 # production, you can use your favorite DWH, such as BigQuery. See Feast documentation
