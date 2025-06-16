@@ -10,15 +10,18 @@ from feast import (
     FeatureView,
     Field,
     FileSource,
+    KafkaSource,
     Project,
     PushSource,
     RequestSource,
 )
-from feast.data_format import DeltaFormat
+from feast.data_format import DeltaFormat, JsonFormat
 from feast.feature_logging import LoggingConfig
 from feast.infra.offline_stores.file_source import FileLoggingDestination
 from feast.on_demand_feature_view import on_demand_feature_view
+from feast.stream_feature_view import stream_feature_view
 from feast.types import Float32, Float64, Int64, String,Int32
+from pandas import DataFrame
 
 # Define a project for the feature repo
 project = Project(name="my_project", description="A project for driver statistics")
@@ -48,18 +51,30 @@ sms_source = FileSource(
     file_format=DeltaFormat(),
 )
 
+driver_stats_stream_source = KafkaSource(
+    name="driver_stats_stream",
+    kafka_bootstrap_servers="localhost:9092",
+    topic="my-topic",
+    timestamp_field="event_timestamp",
+    batch_source=driver_stats_source,
+    message_format=JsonFormat(
+        schema_json="driver_id integer, event_timestamp timestamp, conv_rate double, acc_rate double, created timestamp"
+    ),
+    watermark_delay_threshold=timedelta(minutes=5),
+)
+
 # Our parquet files contain sample data that includes a driver_id column, timestamps and
 # three feature column. Here we define a Feature View that will allow us to serve this
 # data to our model online.
+#The TTL helps determine the materialization window when using materialize_incremental()
+# If no previous materialization exists, it will materialize data from (now - TTL) to now
+#This prevents you from accidentally materializing too much historical data into the online store
 driver_stats_fv = FeatureView(
     # The unique name of this feature view. Two feature views in a single
     # project cannot have the same name
     name="driver_hourly_stats",
     entities=[driver],
-    ttl=timedelta(days=1),
-    # The list of features defined below act as a schema to both define features
-    # for both materialization of features into a store, and are used as references
-    # during retrieval for building a training dataset or serving features
+    # ttl=timedelta(days=1),
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),
@@ -96,6 +111,27 @@ sms_online_fv = FeatureView(
     online=True,
     source=sms_source,
 )
+
+@stream_feature_view(
+    entities=[driver],
+    ttl=timedelta(seconds=8640000000),
+    mode="spark",
+    schema=[
+        Field(name="conv_percentage", dtype=Float32),
+        Field(name="acc_percentage", dtype=Float32),
+    ],
+    timestamp_field="event_timestamp",
+    online=True,
+    source=driver_stats_stream_source,
+)
+def driver_hourly_stats_stream(df: DataFrame):
+    from pyspark.sql.functions import col
+
+    return (
+        df.withColumn("conv_percentage", col("conv_rate") * 100.0)
+        .withColumn("acc_percentage", col("acc_rate") * 100.0)
+        .drop("conv_rate", "acc_rate")
+    )
 
 # Define a request data source which encodes features / information only
 # available at request time (e.g. part of the user initiated HTTP request)
@@ -151,7 +187,7 @@ driver_stats_push_source = PushSource(
 driver_stats_fresh_fv = FeatureView(
     name="driver_hourly_stats_fresh",
     entities=[driver],
-    ttl=timedelta(days=1),
+    # ttl=timedelta(days=1),
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),

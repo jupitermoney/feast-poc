@@ -1,0 +1,9 @@
+feast[postgres]
+grpcio
+grpcio-tools
+grpcio-health-checking
+grpcio-reflection
+psycopg2-binary
+pandas
+pyarrow
+deltalake==0.25.4 

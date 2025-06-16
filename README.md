@@ -2,6 +2,54 @@
 
 This `README.md` provides a step-by-step guide to setting up and running a local Feast project, based on the Feast quickstart. It covers setting up a virtual environment, installing Feast, initializing a project, inspecting sample data, and understanding the local Feast stores.
 
+## Concepts
+
+Repository
+Feast users use Feast to manage two important sets of configuration:
+- Configuration about how to run Feast on your infrastructure: A feature_store.yaml file containing infrastructural configuration. 
+- Feature definitions: A collection of Python files containing feature declarations. Feast reads all Python files recursively when feast apply is ran, including subdirectories, even if they don't contain feature definitions.
+
+Data sources
+TODO
+
+Offline stores
+TODO
+
+Online stores
+Supports PSQL, redis, Cassandra, ScyllaDB, etc
+
+Regsitry
+The Feast feature registry is a central catalog of all feature definitions and their related metadata. Feast uses the registry to store all applied Feast objects (e.g. Feature views, entities, etc).
+Supports S3 and SQL as regsitries,
+
+Feature server
+It is a REST API server built using FastAPI and exposes a limited set of endpoints to serve features, push data, and support materialization operations. The server is scalable, flexible, and designed to work seamlessly with various deployment environments, including local setups and cloud-based systems.
+
+The Feature Server operates as a stateless service backed by two key components:
+- Online Store: The primary data store used for low-latency feature retrieval.
+- Registry: The metadata store that defines feature sets, feature views, and their relationships to entities.
+
+Endpoints Overview
+- /get-online-features: Retrieves feature values for specified entities and feature references.
+- /push: Pushes feature data to the online and/or offline store.
+
+- /materialize: Materializes features within a specific time range to the online store.
+- /materialize-incremental: Incrementally materializes features up to the current timestamp.
+- /retrieve-online-documents: Supports Vector Similarity Search for RAG (Alpha end-ponit)
+- /docs: API Contract for available endpoints
+
+
+Following are the kind of servers
+- Feature server 
+- Registry server: https://github.com/feast-dev/feast/blob/v0.49-branch/docs/reference/registry/registry-permissions.md
+- Offline server
+
+
+## Quick links
+- CLI commands: https://docs.feast.dev/reference/feast-cli-commands or typing feast on terminal. 
+- Productionising feast: https://docs.feast.dev/how-to-guides/running-feast-in-production#42-deploy-feast-feature-servers-on-kubernetes
+- Feature server: https://github.com/feast-dev/feast/tree/v0.49-branch/docs/reference/feature-servers
+
 ## 1. Setup Python Virtual Environment
 
 It's highly recommended to use a virtual environment to manage dependencies for your Feast project. This isolates your project's dependencies from your system-wide Python installation.
