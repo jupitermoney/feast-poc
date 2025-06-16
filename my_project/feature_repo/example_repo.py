@@ -66,15 +66,15 @@ driver_stats_stream_source = KafkaSource(
 # Our parquet files contain sample data that includes a driver_id column, timestamps and
 # three feature column. Here we define a Feature View that will allow us to serve this
 # data to our model online.
+#The TTL helps determine the materialization window when using materialize_incremental()
+# If no previous materialization exists, it will materialize data from (now - TTL) to now
+#This prevents you from accidentally materializing too much historical data into the online store
 driver_stats_fv = FeatureView(
     # The unique name of this feature view. Two feature views in a single
     # project cannot have the same name
     name="driver_hourly_stats",
     entities=[driver],
-    ttl=timedelta(days=1),
-    # The list of features defined below act as a schema to both define features
-    # for both materialization of features into a store, and are used as references
-    # during retrieval for building a training dataset or serving features
+    # ttl=timedelta(days=1),
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),
@@ -187,7 +187,7 @@ driver_stats_push_source = PushSource(
 driver_stats_fresh_fv = FeatureView(
     name="driver_hourly_stats_fresh",
     entities=[driver],
-    ttl=timedelta(days=1),
+    # ttl=timedelta(days=1),
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),

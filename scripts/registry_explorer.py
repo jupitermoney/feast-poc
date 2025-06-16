@@ -49,7 +49,7 @@ class FeastRegistryExplorer:
 if __name__ == "__main__":
     # The repo_path should point to the directory containing feature_store.yaml.
     # If you run this script from 'my_project', then '.' is correct for 'feature_repo'.
-    repo_path = "." # Corrected path relative to where you run this script
+    repo_path = "../my_project/feature_repo"  # Corrected path relative to where you run this script
 
     explorer = FeastRegistryExplorer(repo_path)
 

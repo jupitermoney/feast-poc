@@ -34,7 +34,7 @@ if __name__ == "__main__":
     TOPIC_NAME = 'my-topic'
     # Define the path to your parquet file
     # Assuming data directory is inside my_project/feature_repo/
-    stream_parquet_file_path = "data/driver_stats_stream.parquet"
+    stream_parquet_file_path = "../my_project/feature_repo/data/driver_stats_stream.parquet"
 
     producer = create_kafka_producer(BOOTSTRAP_SERVERS)
 

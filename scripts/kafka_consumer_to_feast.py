@@ -11,11 +11,11 @@ TOPIC_NAME = 'my-topic'
 # IMPORTANT: This path should point to your feature repository directory,
 # which contains your feature_store.yaml and feature view definitions.
 # 'my_project/feature_repo' is relative to your workspace root.
-FEAST_REPO_PATH = '.'
+FEAST_REPO_PATH = '../my_project/feature_repo'
 
 # --- Initialize Feast FeatureStore ---
 try:
-    store = FeatureStore(repo_path=".")
+    store = FeatureStore(repo_path="../my_project/feature_repo")
     print(f"Feast FeatureStore initialized from {FEAST_REPO_PATH}")
 except Exception as e:
     print(f"Error initializing Feast FeatureStore: {e}")

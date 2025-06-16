@@ -3,8 +3,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType, LongType
 
 # The default location for the quickstart parquet file
-parquet_file_path = "./data/driver_stats.parquet"
-stream_parquet_file_path = "./data/driver_stats_stream.parquet"
+parquet_file_path = "../my_project/feature_repo/data/driver_stats.parquet"
+stream_parquet_file_path = "../my_project/feature_repo/data/driver_stats_stream.parquet"
 
 try:
     df = pd.read_parquet(parquet_file_path)
