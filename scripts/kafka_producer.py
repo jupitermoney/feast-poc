@@ -55,8 +55,7 @@ if __name__ == "__main__":
                 send_json_message(producer, TOPIC_NAME, row)
                 print(row)
                 # time.sleep(1.0)
-                if(iteration > 100):
-                    break
+                break
                 
 
         except FileNotFoundError:
