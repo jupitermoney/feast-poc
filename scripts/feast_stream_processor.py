@@ -9,11 +9,23 @@ from feast.infra.contrib.stream_processor import ProcessorConfig
 from feast.infra.contrib.spark_kafka_processor import SparkProcessorConfig
 from feast.infra.contrib.stream_processor import get_stream_processor_object
 import pandas as pd
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+# Set Feast logger to DEBUG level
+logging.getLogger('feast').setLevel(logging.DEBUG)
 
 # --- Configuration ---
 BOOTSTRAP_SERVERS = 'localhost:9092'
 TOPIC_NAME = 'my-topic'
 FEAST_REPO_PATH = "../my_project/feature_repo"
+
+# Set Spark submit arguments
+os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0 pyspark-shell"
 
 # --- Initialize Feast FeatureStore ---
 try:
@@ -36,10 +48,10 @@ except Exception as e:
 
 # --- Spark Session Setup ---
 # See https://spark.apache.org/docs/3.1.2/structured-streaming-kafka-integration.html#deploying for notes on why we need this environment variable.
-# os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages=org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0 pyspark-shell"
+os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages=org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0 pyspark-shell"
 spark = SparkSession.builder.master("local").appName("feast-spark").getOrCreate()
 spark.conf.set("spark.sql.shuffle.partitions", 5)
-spark.sparkContext.setLogLevel("ERROR")
+spark.sparkContext.setLogLevel("INFO")
 
 def preprocess_fn(rows: pd.DataFrame):
     print(f"df columns: {rows.columns}")
@@ -48,7 +60,7 @@ def preprocess_fn(rows: pd.DataFrame):
     return rows
 
 
-ingestion_config = SparkProcessorConfig(mode="spark", source="kafka", spark_session=spark, processing_time="30 seconds", query_timeout=15)
+ingestion_config = SparkProcessorConfig(mode="spark", source="kafka", spark_session=spark, processing_time="10 seconds", query_timeout=15)
 
 processor = get_stream_processor_object(
     config=ingestion_config,

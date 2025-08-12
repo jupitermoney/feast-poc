@@ -54,8 +54,9 @@ if __name__ == "__main__":
                 row["created"] = row["created"].strftime("%Y-%m-%d %H:%M:%S")
                 send_json_message(producer, TOPIC_NAME, row)
                 print(row)
-                time.sleep(1.0)
+                # time.sleep(1.0)
                 break
+                
 
         except FileNotFoundError:
             print(f"Error: Parquet file not found at {stream_parquet_file_path}. Please ensure it exists.")

@@ -18,7 +18,7 @@ TODO
 Online stores
 Supports PSQL, redis, Cassandra, ScyllaDB, etc
 
-Regsitry
+Registry
 The Feast feature registry is a central catalog of all feature definitions and their related metadata. Feast uses the registry to store all applied Feast objects (e.g. Feature views, entities, etc).
 Supports S3 and SQL as regsitries,
 
