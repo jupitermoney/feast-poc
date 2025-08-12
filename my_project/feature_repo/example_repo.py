@@ -21,8 +21,8 @@ from feast.feature_logging import LoggingConfig
 from feast.infra.offline_stores.file_source import FileLoggingDestination
 from feast.infra.offline_stores.contrib.postgres_offline_store.postgres_source import PostgreSQLSource
 from feast.on_demand_feature_view import on_demand_feature_view
-from feast.stream_feature_view import stream_feature_view
-from feast.types import Float32, Float64, Int64, String,Int32
+from feast.stream_feature_view import stream_feature_view, StreamFeatureView
+from feast.types import Float32, Float64, Int64, String, Int32, PrimitiveFeastType
 from pandas import DataFrame
 
 # Define a project for the feature repo
@@ -88,6 +88,7 @@ driver_stats_fv = FeatureView(
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),
         Field(name="avg_daily_trips", dtype=Int64, description="Average daily trips"),
+        Field(name="event_timestamp", dtype=PrimitiveFeastType.UNIX_TIMESTAMP)
     ],
     online=True,
     source=driver_stats_source,
@@ -200,7 +201,7 @@ driver_stats_fresh_fv = FeatureView(
     schema=[
         Field(name="conv_rate", dtype=Float32),
         Field(name="acc_rate", dtype=Float32),
-        Field(name="avg_daily_trips", dtype=Int64),
+        Field(name="avg_daily_trips", dtype=Int64)
     ],
     online=True,
     source=driver_stats_push_source,  # Changed from above

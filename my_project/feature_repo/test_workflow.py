@@ -5,25 +5,33 @@ import pandas as pd
 
 from feast import FeatureStore
 from feast.data_source import PushMode
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+# Set Feast logger to DEBUG level
+logging.getLogger('feast').setLevel(logging.DEBUG)
 
 
 def run_demo():
-    store = FeatureStore(repo_path="../my_project/feature_repo")
+    store = FeatureStore(repo_path=".")
     print("\n--- Run feast apply ---")
     subprocess.run(["feast", "apply"])
 
-    print("\n--- Historical features for training ---")
-    fetch_historical_features_entity_df(store, for_batch_scoring=False)
+    # print("\n--- Historical features for training ---")
+    # fetch_historical_features_entity_df(store, for_batch_scoring=False)
 
     # print("\n--- Historical features for batch scoring ---")
     # fetch_historical_features_entity_df(store, for_batch_scoring=True)
 
-    print("\n--- Load features into online store ---")
-    # store.materialize_incremental(end_date=datetime.now(), feature_views=["sms_online"])
+    # print("\n--- Load features into online store ---")
+    store.materialize_incremental(end_date=datetime.now(), feature_views=["sms_online"])
 
     # print("\n--- Load features into online store ---")
-    store.materialize(start_date =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now(), feature_views=["driver_hourly_stats", "driver_hourly_stats_fresh"])
-
+    store.materialize(start_date =datetime(2021, 5, 1, 00, 00, 00), end_date=datetime.now(), feature_views=["driver_hourly_stats"])
     print("\n--- Online features ---")
     fetch_online_features(store)
 
@@ -102,15 +110,15 @@ def fetch_online_features(store, source: str = ""):
     entity_rows = [
         # {join_key: entity_value}
         {
-            "driver_id": 1001,
-            "val_to_add": 1000,
-            "val_to_add_2": 2000,
+            "driver_id": 1004,
+            # "val_to_add": 1000,
+            # "val_to_add_2": 2000,
         },
-        {
-            "driver_id": 1002,
-            "val_to_add": 1001,
-            "val_to_add_2": 2002,
-        },
+        # {
+        #     "driver_id": 1002,
+        #     # "val_to_add": 1001,
+        #     # "val_to_add_2": 2002,
+        # },
     ]
     if source == "feature_service":
         features_to_fetch = store.get_feature_service("driver_activity_v1")
@@ -119,8 +127,11 @@ def fetch_online_features(store, source: str = ""):
     else:
         features_to_fetch = [
             "driver_hourly_stats:acc_rate",
-            "transformed_conv_rate:conv_rate_plus_val1",
-            "transformed_conv_rate:conv_rate_plus_val2",
+            "driver_hourly_stats:conv_rate",
+            "driver_hourly_stats:avg_daily_trips",
+            "driver_hourly_stats:event_timestamp",
+            # "transformed_conv_rate:conv_rate_plus_val1",
+            # "transformed_conv_rate:conv_rate_plus_val2",
         ]
     returned_features = store.get_online_features(
         features=features_to_fetch,
